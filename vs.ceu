@@ -1,0 +1,39 @@
+/*{-{*/
+
+class VS with
+    event void   go;
+    var   UIGrid grid;
+do
+    await/0 go;
+
+    var Single l1, l2;
+        l1.ref = global:ref_l1;
+        l2.ref = global:ref_l2;
+        emit l1.go;
+        emit l2.go;
+
+    var u8[2] lay;
+        lay[0] = 1;
+        lay[1] = 2;
+
+    grid.clr_bg? = 1;
+        grid.clr_bg.r = 0x20;
+        grid.clr_bg.g = 0x20;
+        grid.clr_bg.b = 0x20;
+
+    grid.spc_x = 20;
+    grid.spc_y = 20;
+    grid.lay_lins = 1;
+    grid.lay_cols = 2;
+    grid.lay := lay;            // TODO !!! depth diferentes?
+
+    var UIDrawable*[2] draws;
+        draws[0] = &l1.grid;
+        draws[1] = &l2.grid;
+    grid.it_n = 2;
+    grid.it_draws := draws;     // TODO !!! depth diferentes?
+
+    await FOREVER;
+end
+
+/*}-}*/ dnl

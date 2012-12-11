@@ -1,0 +1,133 @@
+/*{-{*/
+
+@define(SINGLE_LINS, eval(LIST_LINS+1));
+@define(SINGLE_COLS, 7);
+
+class T with
+    event void  go;
+    var UIGrid  g;
+    var int[20] a;
+do
+    await/0 go;
+    await FOREVER;
+end
+
+class Single with
+    event void   go;
+    var   UIGrid grid;
+    var   int    ref;
+do
+    var _SDL_Texture* tex_rem := _IMG_LoadTexture(global:ren, "imgs/rem.png");
+
+    // LIST
+    var List l;
+
+    // XS
+    var UIGrid grid_xs;
+        var u8[ LIST_LINS ] lay_xs;
+        // 1,2,3,4,5,..
+        loop lin, LIST_LINS do
+            lay_xs[lin] = lin+1;
+        end
+        grid_xs.spc_x = LIST_SPCX;
+        grid_xs.spc_y = LIST_SPCY;
+        grid_xs.lay_lins = LIST_LINS;
+        grid_xs.lay_cols = 1;
+        grid_xs.lay := lay_xs;            // TODO !!! depth diferentes?
+
+        var UIDrawable*[LIST_LINS] draws_xs;
+        grid_xs.it_n = LIST_LINS;
+        grid_xs.it_draws := draws_xs;     // TODO !!! depth diferentes?
+        loop lin, LIST_LINS do
+            draws_xs[lin] = null;
+        end
+
+    // TOT
+    var UITexDrawable tex_tot;
+
+    // ALL
+    var u8[ eval(SINGLE_LINS*SINGLE_COLS) ] lay;
+    // list,     rem
+    // 1,1,1,1,1,1,2
+    // 1,1,1,1,1,1,2
+    // ...
+    // 0,0,0,0,0,3,3
+    //           tot
+    loop lin, SINGLE_LINS do
+        if lin < SINGLE_LINS-1 then
+            loop col, SINGLE_COLS-1 do
+                lay[lin*SINGLE_COLS+col] = 1;
+            end
+            lay[lin*SINGLE_COLS+6] = 2;
+        else
+            loop col, SINGLE_COLS-2 do
+                lay[lin*SINGLE_COLS+col] = 0;
+            end
+            lay[lin*SINGLE_COLS+5] = 3;
+            lay[lin*SINGLE_COLS+6] = 3;
+        end
+    end
+
+    grid.clr_bg? = 1;
+    grid.clr_bg = global:clr_bg;
+    var _SDL_Color clr_txt = global:clr_txt;
+
+    grid.spc_x = LIST_SPCX;
+    grid.spc_y = LIST_SPCY;
+    grid.lay_lins = SINGLE_LINS;
+    grid.lay_cols = SINGLE_COLS;
+    grid.lay := lay;            // TODO !!! depth diferentes?
+
+    var UIDrawable*[3] draws;
+        draws[0] = l.drawable;
+        draws[1] = &grid_xs;
+        draws[2] = &tex_tot;
+    grid.it_n = 3;
+    grid.it_draws := draws;     // TODO !!! depth diferentes?
+
+    await/0 go;
+
+    // list
+        l.ref = ref;
+        emit l.go;
+
+    // xs
+    var _lua_State* lua = global:lua;
+    loop lin, LIST_LINS do
+        if lin < l.n then
+            var UITexDrawable* d;
+            grid_xs.it_draws[lin] = new UITexDrawable;
+            d = <UITexDrawable*> grid_xs.it_draws[lin];
+            d:tex = tex_rem;
+        end
+    end
+
+    // tot
+    do
+        var _char[10] str;
+        _sprintf(str, "%.2f", l.tot);
+        var _SDL_Surface* sfc :=
+            _TTF_RenderText_Shaded(global:font, str,
+                                    global:clr_txt, global:clr_bg);
+        tex_tot.tex := _SDL_CreateTextureFromSurface(global:ren, sfc);
+        tex_tot.tex_own? = 1;
+        _SDL_FreeSurface(sfc);
+    end
+
+    // remove
+    loop do
+        var int* opt = await grid_xs.ok_clicked;   // 2 -> on
+        if *opt <= l.n then          // remove
+            emit global:go_sound = global:snd_rem;
+            _lua_pushvalue(lua, 3);                     // [ t_rem ]
+            _lua_rawgeti(lua, _LUA_REGISTRYINDEX, ref); // [ t_rem | l ]
+            _lua_pushnumber(lua, *opt);                 // [ t_rem | l | lin ]
+            _lua_call(lua, 2, 0);                       // [ ]
+            emit global:go_opt;
+        end
+    end
+finally
+    _SDL_DestroyTexture(tex_rem);
+end
+
+/*}-}*/ dnl

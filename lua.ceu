@@ -1,0 +1,36 @@
+/*{-{*/
+
+C do
+    #include <lua.h>
+    #include <lauxlib.h>
+end
+
+C _lua_State = 0;
+
+C constant _LUA_NOREF, _LUA_REGISTRYINDEX;
+
+C nohold _lua_call(),
+         _lua_close(),
+         _lua_getfield(),
+         _lua_getglobal(),
+         _lua_isnil(),
+         _lua_newtable(),
+         _lua_objlen(),
+         _lua_pop(),
+         _lua_pushnumber(),
+         _lua_pushstring(),
+         _lua_pushvalue(),
+         _lua_rawgeti(),
+         _lua_rawseti(),
+         _lua_remove(),
+         _lua_tonumber(),
+         _lua_tostring();
+
+C nohold _luaL_dofile(),
+         _luaL_loadfile(),
+         _luaL_newstate(),
+         _luaL_openlibs(),
+         _luaL_ref(),
+         _luaL_unref();
+
+/*}-}*/ dnl

@@ -1,0 +1,180 @@
+/*{-{*/
+
+class UIGrid with
+// UIDrawable
+    event void          go_redraw;
+    event _SDL_Rect*    go_redim;
+    event _SDL_Point*   go_click;
+    event void*         ok_clicked;
+    event _SDL_MouseButtonEvent* go_mousebuttondown;
+    var   _SDL_Rect     rect;
+    var   int           align_x;
+    var   int           align_y;
+// UIGrid
+    var int             clr_bg?, clr_fg?, clr_fr?;
+    var _SDL_Color      clr_bg, clr_fg, clr_fr;
+    var int             spc_x, spc_y;
+    var int             lay_lins, lay_cols;
+    var u8*             lay;
+    var int             lay_own?;
+    var u8              it_n;
+    var UIDrawable**    it_draws;
+    var UIDrawable*     it_ptr;
+    var int             it_own?;
+do
+    // defaults
+    clr_bg?  = 0;
+    clr_fg?  = 0;
+    clr_fr?  = 0;
+    spc_x    = 0;
+    spc_y    = 0;
+    lay_own? = 0;
+    lay      = null;
+    it_own?  = 0;
+    it_draws = null;
+
+    var _SDL_Rect* it_rs = null;
+
+    var _SDL_Rect* r = await/0 go_redim;
+    rect = *r;
+
+    it_rs = _malloc(it_n * sizeof<_SDL_Rect>);
+
+    par do
+        // GO_CLICK
+        loop do
+            var _SDL_MouseButtonEvent* but1 = await go_mousebuttondown;
+            loop i, it_n do
+                if _SDL_Rect_vs_Mouse(&it_rs[i], but1) then
+                    if it_draws and it_draws[i] then
+                        emit it_draws[i]:go_mousebuttondown = but1;
+                    end
+                    var _SDL_MouseButtonEvent* but2 = await SDL_MOUSEBUTTONUP;
+                    if but1:x==but2:x and but1:y==but2:y then
+                        var int v = i+1;
+                        emit ok_clicked = &v;
+                    end
+                end
+            end
+        end
+    with
+        // GO_REDIM
+        loop do
+            var int w, px;
+            if spc_x then
+                w  = rect.w*1024 / (lay_cols*1024 + (lay_cols+1)*1024/spc_x);
+                px = w/spc_x;
+            else
+                w  = rect.w / lay_cols;
+                px = 0;
+            end
+
+            var int h, py;
+            if spc_y then
+                h  = rect.h*1024 / (lay_lins*1024 + (lay_lins+1)*1024/spc_y);
+                py = h/spc_y;
+            else
+                h  = rect.h / lay_lins;
+                py = 0;
+            end
+
+            var int cur = 0;
+            var int x, y;
+
+            loop l, lay_lins do
+                x = rect.x + px;        // starts from px
+                if l == 0 then
+                    y = rect.y + py;    // starts from py
+                else
+                    y = y + h + py;
+                end
+
+                loop c, lay_cols do
+                    if c != 0 then
+                        x = x + w + px;
+                    end
+
+                    var int i1  = l*lay_cols + c;
+                    var u8  it1 = lay[i1];
+
+                    if it1 > cur then      // always increasing items
+                        cur = it1;
+                        var _SDL_Rect* cur_r = &it_rs[cur-1];
+                            cur_r:x = x;
+                            cur_r:y = y;
+                            cur_r:w = w;
+                            cur_r:h = h;
+
+                        // colspan
+                        loop j, lay_cols-c-1 do
+                            var u8 it2 = lay[i1 + j+1];
+                            if it1 == it2 then
+                                cur_r:w = cur_r:w + px + w;
+                            else
+                                break;
+                            end
+                        end
+
+                        // linspan
+                        loop j, lay_lins-l-1 do
+                            var u8 it2 = lay[i1 + (j+1)*lay_cols];
+                            if it1 == it2 then
+                                cur_r:h = cur_r:h + py + h;
+                            else
+                                break;
+                            end
+                        end
+                        if it_draws and it_draws[cur-1] then
+                            emit it_draws[cur-1]:go_redim=cur_r;
+                        end
+                    end
+                end
+            end
+
+            r = await go_redim;
+            if r != null then
+                rect = *r;
+            end
+        end
+    with
+        var _SDL_Renderer* ren = global:ren;
+        loop do
+            await go_redraw;
+            if clr_bg? then
+                _SDL_SetRenderDrawColor(ren, clr_bg.r,clr_bg.g,clr_bg.b,0);
+                _SDL_RenderFillRect(ren, &rect);
+            end
+            loop i, it_n do
+                if clr_fg? then
+                    _SDL_SetRenderDrawColor(ren, clr_fg.r,clr_fg.g,clr_fg.b,0);
+                    _SDL_RenderFillRect(ren, &it_rs[i]);
+                end
+/*
+clr_fr? = 1;
+clr_fr.r = 0xFF;
+clr_fr.g = 0x00;
+clr_fr.b = 0x00;
+*/
+                if clr_fr? then
+                    _SDL_SetRenderDrawColor(ren, clr_fr.r,clr_fr.g,clr_fr.b,0);
+                    _SDL_RenderDrawRect(ren, &it_rs[i]);
+                end
+                if it_draws and it_draws[i] then
+                    emit it_draws[i]:go_redraw;
+                end
+            end
+        end
+    end
+finally
+    if lay_own? then
+        _free(lay);
+    end
+    if it_rs then
+        _free(it_rs);
+    end
+    if it_own? and it_draws then
+        _free(it_draws);
+    end
+end
+
+/*}-}*/ dnl

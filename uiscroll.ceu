@@ -1,0 +1,58 @@
+/*{-{*/
+
+class UIScroll with
+// UIDrawable
+    event void                      go_redraw;
+    event _SDL_Rect*                go_redim;
+    event _SDL_MouseButtonEvent*    go_mousebuttondown;
+    event void*                     ok_clicked;
+    var   _SDL_Rect                 rect;
+    var   int                       align_x;
+    var   int                       align_y;
+// Other
+    var   UIDrawable*     drawable;
+do
+    drawable = null;
+
+    var _SDL_Rect* r = await/0 go_redim;
+    rect = *r;
+
+    _assert(drawable);
+
+    par do
+        loop do
+            var _SDL_MouseButtonEvent* but1 = await go_mousebuttondown;
+            par/or do
+                var _SDL_MouseButtonEvent* but2 = await SDL_MOUSEBUTTONUP;
+                if but1:x==but2:x and but1:y==but2:y then
+                    emit ok_clicked=but1;
+                end
+            with
+                loop do
+                    var _SDL_MouseMotionEvent* mse = await SDL_MOUSEMOTION;
+                    drawable:rect.x = drawable:rect.x + mse:xrel;
+                    drawable:rect.y = drawable:rect.y + mse:yrel;
+                    emit drawable:go_redim = &drawable:rect;
+                end
+            end
+        end
+    with
+        loop do
+            emit drawable:go_redim = r;
+            r = await go_redim;
+            if r != null then
+                rect = *r;
+            end
+        end
+    with
+        loop do
+            await go_redraw;
+            _glEnable(_GL_SCISSOR_TEST);
+            _glScissor(rect.x,global:win_rect.h-rect.y-rect.h,rect.w,rect.h);
+            emit drawable:go_redraw;
+            _glDisable(_GL_SCISSOR_TEST);
+        end
+    end
+end
+
+/*}-}*/ dnl
