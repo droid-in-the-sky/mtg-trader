@@ -30,7 +30,8 @@ C nohold _luaL_dofile(),
          _luaL_loadfile(),
          _luaL_newstate(),
          _luaL_openlibs(),
-         _luaL_ref(),
          _luaL_unref();
+
+C nohold _luaL_ref();   // TODO: should be hold
 
 /*}-}*/ dnl

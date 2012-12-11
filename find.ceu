@@ -8,7 +8,7 @@ class FindL with
     var   UIGrid grid;
     var   int    n;
 do
-    var _SDL_Texture* tex_add := _IMG_LoadTexture(global:ren, "imgs/add.png");
+    var _SDL_Texture* tex_add = _IMG_LoadTexture(global:ren, "imgs/add.png");
 
     grid.spc_x = LIST_SPCX;
     grid.spc_y = LIST_SPCY;
@@ -20,11 +20,11 @@ do
     end
     grid.lay_lins = LIST_LINS;
     grid.lay_cols = 1;
-    grid.lay := lay;            // TODO !!! depth diferentes?
+    grid.lay = lay;
 
     var UIDrawable*[LIST_LINS] draws;
     grid.it_n = LIST_LINS;
-    grid.it_draws := draws;     // TODO !!! depth diferentes?
+    grid.it_draws = draws;
     loop lin, LIST_LINS do
         draws[lin] = null;
     end
@@ -34,9 +34,8 @@ do
     // add
     loop lin, FIND_LINS do
         if lin < this.n then
-            var UITexDrawable* d;
-            grid.it_draws[lin] = new UITexDrawable;
-            d = <UITexDrawable*> grid.it_draws[lin];
+            var UITexDrawable* d = new UITexDrawable;
+            grid.it_draws[lin] ::= d;
             d:tex = tex_add;
         end
     end
@@ -80,14 +79,14 @@ do
     end
     grid.lay_lins = FIND_LINS;
     grid.lay_cols = FIND_COLS;
-    grid.lay := lay;            // TODO !!! depth diferentes?
+    grid.lay = lay;
 
     var UIDrawable*[3] draws;
         draws[0] = res.drawable;
         draws[1] = &l1.grid;
         draws[2] = &l2.grid;
     grid.it_n = 3;
-    grid.it_draws := draws;     // TODO !!! depth diferentes?
+    grid.it_draws = draws;
 
     await/0 go;
 

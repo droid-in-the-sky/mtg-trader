@@ -1,16 +1,7 @@
 /*{-{*/
 
 class UIGrid with
-// UIDrawable
-    event void          go_redraw;
-    event _SDL_Rect*    go_redim;
-    event _SDL_Point*   go_click;
-    event void*         ok_clicked;
-    event _SDL_MouseButtonEvent* go_mousebuttondown;
-    var   _SDL_Rect     rect;
-    var   int           align_x;
-    var   int           align_y;
-// UIGrid
+    interface UIDrawable;
     var int             clr_bg?, clr_fg?, clr_fr?;
     var _SDL_Color      clr_bg, clr_fg, clr_fr;
     var int             spc_x, spc_y;

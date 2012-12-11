@@ -9,15 +9,7 @@ C do
 end
 
 class UITextField with
-// UIDrawable
-    event void                      go_redraw;
-    event _SDL_Rect*                go_redim;
-    event _SDL_MouseButtonEvent*    go_mousebuttondown;
-    event void*                     ok_clicked;
-    var   _SDL_Rect                 rect;
-    var   int                       align_x;
-    var   int                       align_y;
-// Other
+    interface UIDrawable;
     var _SDL_Color      clr_bg, clr_fg;
     event int           go_keyboard;
     event _char*        ok_keyboard;
@@ -97,7 +89,7 @@ do
             tex:tex_own? = 1;
             var _SDL_Surface* sfc :=
                 _TTF_RenderText_Shaded(font, s, clr_fg, clr_bg);
-            tex:tex := _SDL_CreateTextureFromSurface(global:ren, sfc);
+            tex:tex = _SDL_CreateTextureFromSurface(global:ren, sfc);
             _SDL_FreeSurface(sfc);
             emit tex:go_redim=&rect;
 

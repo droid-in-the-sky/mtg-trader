@@ -25,13 +25,13 @@ do
     grid.spc_y = 20;
     grid.lay_lins = 1;
     grid.lay_cols = 2;
-    grid.lay := lay;            // TODO !!! depth diferentes?
+    grid.lay = lay;
 
     var UIDrawable*[2] draws;
         draws[0] = &l1.grid;
         draws[1] = &l2.grid;
     grid.it_n = 2;
-    grid.it_draws := draws;     // TODO !!! depth diferentes?
+    grid.it_draws = draws;
 
     await FOREVER;
 end

@@ -17,7 +17,7 @@ class Single with
     var   UIGrid grid;
     var   int    ref;
 do
-    var _SDL_Texture* tex_rem := _IMG_LoadTexture(global:ren, "imgs/rem.png");
+    var _SDL_Texture* tex_rem = _IMG_LoadTexture(global:ren, "imgs/rem.png");
 
     // LIST
     var List l;
@@ -33,11 +33,11 @@ do
         grid_xs.spc_y = LIST_SPCY;
         grid_xs.lay_lins = LIST_LINS;
         grid_xs.lay_cols = 1;
-        grid_xs.lay := lay_xs;            // TODO !!! depth diferentes?
+        grid_xs.lay = lay_xs;
 
         var UIDrawable*[LIST_LINS] draws_xs;
         grid_xs.it_n = LIST_LINS;
-        grid_xs.it_draws := draws_xs;     // TODO !!! depth diferentes?
+        grid_xs.it_draws = draws_xs;
         loop lin, LIST_LINS do
             draws_xs[lin] = null;
         end
@@ -76,14 +76,14 @@ do
     grid.spc_y = LIST_SPCY;
     grid.lay_lins = SINGLE_LINS;
     grid.lay_cols = SINGLE_COLS;
-    grid.lay := lay;            // TODO !!! depth diferentes?
+    grid.lay = lay;
 
     var UIDrawable*[3] draws;
         draws[0] = l.drawable;
         draws[1] = &grid_xs;
         draws[2] = &tex_tot;
     grid.it_n = 3;
-    grid.it_draws := draws;     // TODO !!! depth diferentes?
+    grid.it_draws = draws;
 
     await/0 go;
 
@@ -95,9 +95,8 @@ do
     var _lua_State* lua = global:lua;
     loop lin, LIST_LINS do
         if lin < l.n then
-            var UITexDrawable* d;
-            grid_xs.it_draws[lin] = new UITexDrawable;
-            d = <UITexDrawable*> grid_xs.it_draws[lin];
+            var UITexDrawable* d = new UITexDrawable;
+            grid_xs.it_draws[lin] ::= d;
             d:tex = tex_rem;
         end
     end
@@ -109,7 +108,7 @@ do
         var _SDL_Surface* sfc :=
             _TTF_RenderText_Shaded(global:font, str,
                                     global:clr_txt, global:clr_bg);
-        tex_tot.tex := _SDL_CreateTextureFromSurface(global:ren, sfc);
+        tex_tot.tex = _SDL_CreateTextureFromSurface(global:ren, sfc);
         tex_tot.tex_own? = 1;
         _SDL_FreeSurface(sfc);
     end

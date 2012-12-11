@@ -44,15 +44,15 @@ do
         grid.spc_y = LIST_SPCY;
         grid.lay_lins = LIST_LINS;
         grid.lay_cols = LIST_COLS;
-        grid.lay := lay;            // TODO !!! depth diferentes?
+        grid.lay = lay;
         grid.it_n = LIST_ITS;
-        grid.it_draws := draws;     // TODO !!! depth diferentes?
-    this.drawable := &grid;         // TODO !!! depths diferentes?
+        grid.it_draws = draws;
+    this.drawable = &grid;
 
 /*
     var UIScroll scroll;
         scroll.drawable = &grid;
-    this.drawable := &scroll;       // TODO !!! depths diferentes?
+    this.drawable = &scroll;
 */
 
     await/0 go;
@@ -77,8 +77,8 @@ do
 
             // name
             do
-                grid.it_ptr = new UITexDrawable;
-                var UITexDrawable* d = <UITexDrawable*> grid.it_ptr;
+                var UITexDrawable* d = new UITexDrawable;
+                grid.it_ptr ::= d;
                 draws[lin*LIST_ITS_LINS+0] := d;
                 var _SDL_Surface* sfc :=
                     _TTF_RenderText_Shaded(global:font, name,
@@ -90,8 +90,8 @@ do
             end
             // price
             do
-                grid.it_ptr = new UITexDrawable;
-                var UITexDrawable* d = <UITexDrawable*> grid.it_ptr;
+                var UITexDrawable* d = new UITexDrawable;
+                grid.it_ptr ::= d;
                 draws[lin*LIST_ITS_LINS+1] := d;
                 var _SDL_Surface* sfc :=
                     _TTF_RenderText_Shaded(global:font, price,

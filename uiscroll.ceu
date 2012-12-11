@@ -1,23 +1,15 @@
 /*{-{*/
 
 class UIScroll with
-// UIDrawable
-    event void                      go_redraw;
-    event _SDL_Rect*                go_redim;
-    event _SDL_MouseButtonEvent*    go_mousebuttondown;
-    event void*                     ok_clicked;
-    var   _SDL_Rect                 rect;
-    var   int                       align_x;
-    var   int                       align_y;
-// Other
-    var   UIDrawable*     drawable;
+    interface UIDrawable;
+    var UIDrawable* drawable;
 do
     drawable = null;
 
     var _SDL_Rect* r = await/0 go_redim;
     rect = *r;
 
-    _assert(drawable);
+    _assert(drawable != null);
 
     par do
         loop do

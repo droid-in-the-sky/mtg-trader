@@ -1,14 +1,13 @@
 /*{-{*/
 
-C _float = 4;
+C _char  = 1,
+  _float = 4;
 
 C constant _stderr;
-C nohold _fprintf(), _printf();     // TODO: nohold should not be needed
+C _fprintf(), _printf(), _assert();
 C nohold _sprintf();
 C nohold _free();
-C nohold _assert();
 C _malloc();
-C _char = 1;
 
 C constant _GL_SCISSOR_TEST;
 C _glEnable(), _glDisable(), _glScissor();

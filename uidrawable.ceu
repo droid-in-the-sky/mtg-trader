@@ -48,15 +48,7 @@ end
 // TODO: clipping
 
 class UITexDrawable with
-// UIDrawable
-    event void                      go_redraw;
-    event _SDL_Rect*                go_redim;
-    event _SDL_MouseButtonEvent*    go_mousebuttondown;
-    event void*                     ok_clicked;
-    var   _SDL_Rect                 rect;
-    var   int                       align_x;
-    var   int                       align_y;
-// Other
+    interface UIDrawable;
     var   _SDL_Texture* tex;
     var   int           tex_own?;
 do
