@@ -9,7 +9,7 @@ C do
 end
 
 class UITextField with
-    interface UIDrawable;
+    interface UI;
     var _SDL_Color      clr_bg, clr_fg;
     event int           go_keyboard;
     event _char*        ok_keyboard;
@@ -18,19 +18,31 @@ class UITextField with
 do
     this.font_own? = 0;
 
-    var int           keyboard? = 0;
-    var _char[21]     txt;
-    var UITexDrawable*  tex = null;
+    var int            keyboard? = 0;
+    var _char[21]      txt;
+    var UITexture* tex = null;
 
     var int txt_len = 0;
     txt[0] = '\0';
 
     var int cursor? = 0;
 
-    var _SDL_Rect* r = await/0 go_redim;
-    rect = *r;
+    await/0 go;
+        _assert(font != null);
 
+    var _SDL_Rect* r = await/0 go_redim;
     par do
+        loop do
+            var _SDL_MouseButtonEvent* but = await go_mousebuttondown;
+            if _SDL_Rect_vs_Mouse(&rect, but) then
+                if keyboard? then
+                    emit ok_keyboard = txt;
+                else
+                    emit go_keyboard;
+                end
+            end
+        end
+    with
         loop do
             await go_keyboard;
             keyboard? = 1;
@@ -79,36 +91,34 @@ do
         end
     with
         loop do
+            if r != null then
+                rect = *r;
+            end
+            free tex;
+
             var _char* s = " "; // RenderText returns null for 0-len strings
             if txt_len > 0 then
                 s = txt;
             end
 
-            tex = new UITexDrawable;
+            tex = new UITexture;
             tex:align_x = _UI_ALIGN_LEFT;
             tex:tex_own? = 1;
             var _SDL_Surface* sfc :=
                 _TTF_RenderText_Shaded(font, s, clr_fg, clr_bg);
             tex:tex = _SDL_CreateTextureFromSurface(global:ren, sfc);
             _SDL_FreeSurface(sfc);
+            emit tex:go;
             emit tex:go_redim=&rect;
 
             r = await go_redim;
-            if r != null then
-                rect = *r;
-            end
-            free tex;
         end
     with
         loop do
-            var _SDL_MouseButtonEvent* but = await go_mousebuttondown;
-            if _SDL_Rect_vs_Mouse(&rect, but) then
-                if keyboard? then
-                    emit ok_keyboard = txt;
-                else
-                    emit go_keyboard;
-                end
-            end
+            var _SDL_Point* pt = await go_move;
+            rect.x = rect.x + pt:x;
+            rect.y = rect.y + pt:y;
+            emit tex:go_move=pt;
         end
     with
         var _SDL_Renderer* ren = global:ren;

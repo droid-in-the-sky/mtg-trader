@@ -1,37 +1,28 @@
 /*{-{*/
 
 class VS with
-    event void   go;
-    var   UIGrid grid;
+    event void go;
+    var   UI*  ui;
 do
-    await/0 go;
+    var LuaGrid vs;
+    this.ui = &vs.grid;
 
     var Single l1, l2;
-        l1.ref = global:ref_l1;
-        l2.ref = global:ref_l2;
+
+    await/0 go;
+
+    l1.name = "L1";
         emit l1.go;
+    l2.name = "L2";
         emit l2.go;
 
-    var u8[2] lay;
-        lay[0] = 1;
-        lay[1] = 2;
+    var _lua_State* lua = global:lua;
+    _lua_getglobal(lua, "grid_vs");      // [ t ]
+    vs.ref = _luaL_ref(lua, _LUA_REGISTRYINDEX);
+    emit vs.go;                          // [ ]
 
-    grid.clr_bg? = 1;
-        grid.clr_bg.r = 0x20;
-        grid.clr_bg.g = 0x20;
-        grid.clr_bg.b = 0x20;
-
-    grid.spc_x = 20;
-    grid.spc_y = 20;
-    grid.lay_lins = 1;
-    grid.lay_cols = 2;
-    grid.lay = lay;
-
-    var UIDrawable*[2] draws;
-        draws[0] = &l1.grid;
-        draws[1] = &l2.grid;
-    grid.it_n = 2;
-    grid.it_draws = draws;
+    vs.grid.uis[0] = l1.ui;
+    vs.grid.uis[1] = l2.ui;
 
     await FOREVER;
 end

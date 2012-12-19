@@ -1,5 +1,10 @@
-local fin  = assert(io.open'current-magic-excel.txt')
-local fout = assert(io.open('list.lua','w'))
+#!/usr/bin/env lua
+
+local fin_name = 'current-magic-excel.txt'
+local fin = assert(io.open(fin_name))
+
+local fout_name = 'lua/cards.lua'
+local fout = assert(io.open(fout_name,'w'))
 
 fout:write('return {\n')
 
@@ -18,3 +23,6 @@ end
 
 fout:write('}\n')
 fout:close()
+
+print(fin_name..' => '..fout_name)
+print(n..' entries')

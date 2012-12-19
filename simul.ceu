@@ -1,5 +1,8 @@
 /*{-{*/
 
+// TODO
+// - test scrolling
+
 C do
     #define SDL_SIMUL
 end
@@ -12,30 +15,32 @@ var int n1=0, n2=0;
 
 par/or do
 /*
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-    await 30min;
-    _printf("%d %d\n", n1, n2);
-with
 */
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+    await 30min;
+    //_printf("%d %d\n", n1, n2);
+with
     loop do
         n1 = n1 + 1;
         async do
             emit SDL_REDRAW;
         end
-        await 5min;
+        await 2min;
     end
 with
     loop do
         n2 = n2 + 1;
+        var int win_w = win_rect.w;
+        var int win_h = win_rect.h;
         async (ren, win_w, win_h) do
             var int dt = 0;
 
@@ -51,6 +56,8 @@ with
                     dt = dt + v;
                 end
 
+/*
+*/
             // input
                 // 32=' ' => 126='~'
                 var _char[2] str;
@@ -86,7 +93,6 @@ with
                         dt = dt + v;
                     end
                 end
-
 /*
             emit SDL_REDRAW;
             _SDL_SetRenderDrawColor(ren, 0xFF,0x00,0xFF, 0);

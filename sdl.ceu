@@ -4,12 +4,12 @@ C _char  = 1,
   _float = 4;
 
 C constant _stderr;
-C _fprintf(), _printf(), _assert();
-C nohold _sprintf();
+C _assert();
+C nohold _sprintf(), _fprintf(), _printf();
 C nohold _free();
 C _malloc();
 
-C constant _GL_SCISSOR_TEST;
+C constant _GL_SCISSOR_TEST, _GL_TEXTURE_2D;
 C _glEnable(), _glDisable(), _glScissor();
 
 C _SDL_Rect  = 16,
@@ -29,14 +29,18 @@ C _SDL_Rect  = 16,
   _Mix_Chunk    = 0;
 
 C constant _SDL_TRUE, _SDL_FALSE,
+           _SDL_BLENDMODE_NONE, _SDL_BLENDMODE_BLEND,
            _SDL_BUTTON_LEFT,
            _SDL_BUTTON_RIGHT,
            _SDL_KEYDOWN,
            _SDL_MOUSEBUTTONDOWN,
+           _SDL_PIXELFORMAT_UNKNOWN,
            _SDL_SCANCODE_AC_BACK,
            _SDL_RENDERER_ACCELERATED,
            _SDL_RENDERER_PRESENTVSYNC,
            _SDL_TEXTINPUT,
+           _SDL_TEXTUREACCESS_STATIC,
+           _SDL_TEXTUREACCESS_TARGET,
            _SDL_WINDOW_SHOWN,
            _SDL_WINDOW_RESIZABLE,
            _SDL_WINDOWEVENT_RESIZED,
@@ -47,11 +51,14 @@ C constant _SDLK_ESCAPE,
            _SDLK_RETURN,
            _SDLK_p;
 
-C nohold _SDL_CreateWindow(),
-         _SDL_SetWindowFullscreen(),
-         _SDL_GetWindowSize(),
+C nohold _SDL_GL_BindTexture(),
+         _SDL_CreateWindow(),
          _SDL_CreateRenderer(),
+         _SDL_CreateTexture(),
          _SDL_CreateTextureFromSurface(),
+         _SDL_GetMouseState(),
+         _SDL_GetWindowSize(),
+         _SDL_SetWindowFullscreen(),
          _SDL_SetRenderDrawColor(),
          _SDL_RenderClear(),
          _SDL_RenderDrawRect(),
@@ -65,6 +72,9 @@ C nohold _SDL_CreateWindow(),
          _SDL_QueryTexture(),
          _SDL_Quit(),
          _SDL_Delay(),
+         _SDL_SetEventFilter(),
+         _SDL_SetRenderDrawBlendMode(),
+         _SDL_SetRenderTarget(),
          _SDL_SetTextInputRect(),
          _SDL_SetWindowDisplayMode(),
          _SDL_StartTextInput(),

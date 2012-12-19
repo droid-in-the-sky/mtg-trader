@@ -7,44 +7,45 @@ input void SDL_QUIT;
 input _SDL_WindowEvent*      SDL_WINDOWEVENT;
 input _SDL_KeyboardEvent*    SDL_KEYDOWN;
 input _SDL_MouseButtonEvent* SDL_MOUSEBUTTONDOWN;
-input _SDL_MouseButtonEvent* SDL_MOUSEBUTTONUP;
-input _SDL_MouseMotionEvent* SDL_MOUSEMOTION;
-
 
 interface Global with
-    event void              go_opt;
+// lua
+    var   _lua_State*       lua;
 // screen
     var   _SDL_Renderer*    ren;
     var   _SDL_Rect         win_rect;
-    var   _SDL_Color        clr_bg, clr_txt;
-    var   _TTF_Font*        font;
-// lua
-    var   _lua_State*       lua;
-    var   int               ref_l1, ref_l2;
 // sound
     event _Mix_Chunk*       go_sound;
-    var   _Mix_Chunk*       snd_add, snd_rem;
+    var   _Mix_Chunk*       snd_chg, snd_add, snd_rem;
     //var int               mute?;
+// other
+    event int               go_opt;
 end
 
-@include(uidrawable.ceu);
+@include(ui.ceu);
 @include(uigrid.ceu);
-//@include(uiscroll.ceu);
+@include(uiscroll.ceu);
 @include(uitextfield.ceu);
+@include(luagrid.ceu);
 
-@include(list.ceu);
 @include(find.ceu);
 @include(single.ceu);
 @include(vs.ceu);
 
-event void go_opt;
+event int go_opt;
 
 // screen
     var _SDL_Rect win_rect;
         win_rect.x = 0;
         win_rect.y = 0;
     var _SDL_Window* win := _SDL_CreateWindow("MTG Trader",
-                                500, 1300, 800, 480, _SDL_WINDOW_SHOWN);
+                                500, 1300, 320, 240, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 400, 240, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 432, 240, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 480, 320, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 640, 480, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 800, 480, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 1280, 800, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 800, 480, _SDL_WINDOW_RESIZABLE);
     //_SDL_SetWindowFullscreen(win, _SDL_TRUE);
     _SDL_GetWindowSize(win, &win_rect.w, &win_rect.h);
@@ -52,69 +53,67 @@ event void go_opt;
     var _SDL_Renderer* ren := _SDL_CreateRenderer(win, -1,
                                 _SDL_RENDERER_ACCELERATED|_SDL_RENDERER_PRESENTVSYNC);
 
-    var _SDL_Color clr_bg;  // WHITE
-        clr_bg.r = 0xCC;
-        clr_bg.g = 0xCC;
-        clr_bg.b = 0xCC;
-
-    var _SDL_Color clr_txt; // BLACK
-        clr_txt.r = 0x33;
-        clr_txt.g = 0x33;
-        clr_txt.b = 0x33;
-
     _TTF_Init();
-    var _TTF_Font* font := _TTF_OpenFont("fnts/monofonto.ttf", win_rect.h/24);
 
-// lua
-    var _lua_State* lua := _luaL_newstate();
-    _luaL_openlibs(lua);
-    _luaL_dofile(lua, "lua/find.lua");      // [ find ]
-    _luaL_dofile(lua, "lua/cards.lua");     // [ find | cards ]
-    //_luaL_dofile(lua,
-    //    "/data/data/org.droid_in_the_sky.mtg_trader/lib/lib_lua_find.so");
-    //_luaL_dofile(lua,
-    //    "/data/data/org.droid_in_the_sky.mtg_trader/lib/lib_lua_cards.so");
-    _lua_getglobal(lua, "table");       // [ find | cards | table ]
-    _lua_getfield(lua, 3, "remove");    // [ find | cards | table | t_rem ]
-    _lua_remove(lua, 3);                // [ find | cards | t_rem ]
-    _lua_newtable(lua);                 // [ find | cards | t_rem | l1 ]
-    _lua_newtable(lua);                 // [ find | cards | t_rem | l1 | l2 ]
-    var int ref_l1 = _luaL_ref(lua, _LUA_REGISTRYINDEX);
-    var int ref_l2 = _luaL_ref(lua, _LUA_REGISTRYINDEX);
-                                        // [ find | cards | t_rem ]
+    C _SDL_filter ();
+    C do
+        int SDL_filter (void* userdata, SDL_Event* event) {
+            int s = (event->type != SDL_MOUSEMOTION)
+                && (event->type != SDL_FINGERMOTION);
+            return (event->type != SDL_MOUSEMOTION)
+                && (event->type != SDL_FINGERMOTION);
+        }
+    end
+    _SDL_SetEventFilter(_SDL_filter, null);
+
 // sound
     _Mix_OpenAudio(22050, _AUDIO_S16SYS, 2, 4096);
     event _Mix_Chunk* go_sound;
     //var int mute? = 0;
+    var _Mix_Chunk* snd_chg := _Mix_LoadWAV("snds/chg.wav");
     var _Mix_Chunk* snd_add := _Mix_LoadWAV("snds/add.wav");
     var _Mix_Chunk* snd_rem := _Mix_LoadWAV("snds/rem.wav");
 
+// lua
+    var _lua_State* lua := _luaL_newstate();
+    _lua_atpanic(lua, _ceu_lua_atpanic);
+    _luaL_openlibs(lua);
+    var int idx = _lua_gettop(lua);
+
+    // W / H
+        _lua_pushnumber(lua, win_rect.w);   // [ W ]
+        _lua_setglobal(lua, "UI_W");        // [ ]
+        _lua_pushnumber(lua, win_rect.h);   // [ H ]
+        _lua_setglobal(lua, "UI_H");        // [ ]
+
+    @ifdef(`ANDROID',`
+        _lua_pushboolean(lua, 1);           // [ true ]
+        _lua_setglobal(lua, "ANDROID");     // [ ]
+        _luaL_dofile(lua,                   // [ cards ]
+            "/data/data/org.droid_in_the_sky.mtg_trader/lib/lib_lua_cards.so");
+        _lua_setglobal(lua, "CARDS");       // [ ]
+        _luaL_dofile(lua,
+            "/data/data/org.droid_in_the_sky.mtg_trader/lib/lib_lua_global.so");
+    ',`
+        _luaL_dofile(lua, "lua/cards.lua"); // [ cards ]
+        _lua_setglobal(lua, "CARDS");       // [ ]
+        _luaL_dofile(lua, "lua/global.lua");
+    ')
+    _lua_settop(lua, idx);
+    _LuaGrid_res_load(lua, ren, win_rect.h);
+
 do      // LOCALS
+    // MAIN
+    var LuaGrid main;
+        _lua_getglobal(lua, "grid_main");       // [ t ]
+        main.ref = _luaL_ref(lua, _LUA_REGISTRYINDEX);
+        emit main.go;                           // [ ]
 
-    var UITexDrawable tex_find;
-        tex_find.tex := _IMG_LoadTexture(ren, "imgs/find.png");
-        tex_find.tex_own? = 1;
-
-    var UITexDrawable tex_l1;
-        tex_l1.tex := _IMG_LoadTexture(ren, "imgs/list.png");
-        tex_l1.tex_own? = 1;
-    var UITexDrawable tex_l2;
-        tex_l2.tex := _IMG_LoadTexture(ren, "imgs/list.png");
-        tex_l2.tex_own? = 1;
-
-    var UITexDrawable tex_vs;
-        tex_vs.tex := _IMG_LoadTexture(ren, "imgs/vs.png");
-        tex_vs.tex_own? = 1;
-
-    C _lay_main, _lay_bar, _lay_find;
-    C do
-        u8 lay_main[8] = { 1, 2, 2, 2, 2, 2, 2, 2 };
-        u8 lay_bar[10] = { 1, 2, 2, 2, 2, 2, 0, 3, 4, 5 };
-    end
-
+    // TXT
     var UITextField txt;
-        txt.font = font;
-        // clr_bg           // WHITE
+        txt.font := _TTF_OpenFont("fnts/monofonto.ttf", win_rect.h/24);
+        txt.font_own? = 1;
+        // clr_bg = WHITE
             txt.clr_bg.r = 0xFF;
             txt.clr_bg.g = 0xFF;
             txt.clr_bg.b = 0xFF;
@@ -122,83 +121,18 @@ do      // LOCALS
             txt.clr_fg.r = 0x00;
             txt.clr_fg.g = 0x00;
             txt.clr_fg.b = 0x00;
+        emit txt.go;
 
-    var UIDrawable*[5] bar_draws;
-    var UIGrid bar;
-        bar.clr_bg? = 1;    // BROWN
-            bar.clr_bg.r = 0x40;
-            bar.clr_bg.g = 0x0D;
-            bar.clr_bg.b = 0x12;
-        bar.spc_x    =  5;
-        bar.spc_y    = 10;
-        bar.lay_lins =  1;
-        bar.lay_cols = 10;
-        bar.lay      = _lay_bar;
-        bar.it_n     = 5;
-        bar.it_draws = bar_draws;
-            bar_draws[0] = &tex_find;
-            bar_draws[1] = &txt;
-            bar_draws[2] = &tex_vs;
-            bar_draws[3] = &tex_l1;
-            bar_draws[4] = &tex_l2;
+    // BAR
+        var UIGrid* bar = <UIGrid*> main.grid.uis[0];
+        bar:uis[1] = &txt;
 
-    var UIDrawable*[2] main_draws;
-    var UIGrid main;
-        main.lay_lins = 8;
-        main.lay_cols = 1;
-        main.lay      = _lay_main;
-        main.it_n     = 2;
-        main.it_draws = main_draws;
-            main_draws[0] = &bar;
-            main_draws[1] = null;
+//if 0 then   // VALGRIND
 
-// TODO: memory peek
-/*
-if 0 then   // VALGRIND
-==5946== ==5946== HEAP SUMMARY:
-==5946==     in use at exit: 63,557 bytes in 631 blocks
-==5946==   total heap usage: 182,050 allocs, 181,419 frees, 113,166,121 bytes allocated
-==5946== 
-==5946== LEAK SUMMARY:
-==5946==    definitely lost: 870 bytes in 13 blocks
-==5946==    indirectly lost: 0 bytes in 0 blocks
-==5946==      possibly lost: 0 bytes in 0 blocks
-==5946==    still reachable: 62,687 bytes in 618 blocks
-==5946==         suppressed: 0 bytes in 0 blocks
-==5946== Rerun with --leak-check=full to see details of leaked memory
-==5946== 
-==5946== For counts of detected and suppressed errors, rerun with: -v
-==5946== Use --track-origins=yes to see where uninitialised values come from
-==5946== ERROR SUMMARY: 9481 errors from 5 contexts (suppressed: 234 from 11)
-===============================================================================
--- 30 min and RenderDrawRect
-==16473== HEAP SUMMARY:
-==16473==     in use at exit: 63,645 bytes in 632 blocks
-==16473==   total heap usage: 467,626 allocs, 466,994 frees, 321,235,528 bytes allocated
-==16473== 
-==16473== LEAK SUMMARY:
-==16473==    definitely lost: 958 bytes in 14 blocks
-==16473==    indirectly lost: 0 bytes in 0 blocks
-==16473==      possibly lost: 0 bytes in 0 blocks
-==16473==    still reachable: 62,687 bytes in 618 blocks
-==16473==         suppressed: 0 bytes in 0 blocks
-==16473== Rerun with --leak-check=full to see details of leaked memory
-==16473== 
-==16473== For counts of detected and suppressed errors, rerun with: -v
-==16473== Use --track-origins=yes to see where uninitialised values come from
-==16473== ERROR SUMMARY: 4454740 errors from 7 contexts (suppressed: 234 from 11)
-*/
+    emit main.grid.go_redim = &win_rect;
 
     par/or do
         await SDL_QUIT;
-    with
-        loop do
-            // TODO: background
-            var _SDL_KeyboardEvent* key = await SDL_KEYDOWN;
-            if key:keysym.scancode == _SDL_SCANCODE_AC_BACK then
-                //break;
-            end
-        end
     with
 /**
         // SIMUL
@@ -225,64 +159,65 @@ if 0 then   // VALGRIND
                 win_rect.h = evt:data2;
                 ren := _SDL_CreateRenderer(win, -1,
                             _SDL_RENDERER_ACCELERATED|_SDL_RENDERER_PRESENTVSYNC);
-_printf("%d %d\n", win_rect.w, win_rect.h);
-                emit main.go_redim = &win_rect;
+                emit main.grid.go_redim = &win_rect;
             end
         end
     with
 */
+        emit main.grid.go_redim = &win_rect;
         await START;
 
-        var _char* fnd_str = "";
         var int opt = 1;
+        var _char* fnd_str = "";
         loop do
-            var Find*   fnd;
-            var Single* lst;
-            var VS* vs;
+            event UI* d = null;
 
             par/or do
-                fnd_str = await txt.ok_keyboard;
+                await/0 d;
+                main.grid.ui_ptr := d;
+                emit main.grid.go_ui=1;
+                await FOREVER;
+            with
+                fnd_str = await txt.ok_keyboard; // concurrent w/ ok_uiclicked
                 opt = 1;
             with
-                var int* p = await bar.ok_clicked;
-                opt = *p;   // VS=3, L1=4, L2=5
+                opt = await bar:ok_uiclicked; // VS=3, L1=4, L2=5
+                emit go_sound=snd_chg;
             with
                 await global:go_opt;
                 // keep opt
             with
+                emit global:go_opt = opt;
 
                 // FIND
                 if opt==1 or opt==2 then
-                    fnd = new Find;
-                        fnd:str  = fnd_str;
-                        emit fnd:go;
-                    main.it_draws[1] = &fnd:grid;
+                    var Find fnd;
+                        fnd.str = fnd_str;
+                        emit fnd.go;
+                    emit d = fnd.ui;
+                    await FOREVER;
 
                 // VS
                 else/if opt == 3 then
-                    vs = new VS;
-                        emit vs:go;
-                    main.it_draws[1] = &vs:grid;
+                    var VS vs;
+                        emit vs.go;
+                    emit d = vs.ui;
+                    await FOREVER;
 
                 // L1 / L2
                 else/if opt==4 or opt==5 then
-                    lst = new Single;
+                    var Single lst;
                         if opt == 4 then
-                            lst:ref = global:ref_l1;
+                            lst.name = "L1";
                         else
-                            lst:ref = global:ref_l2;
+                            lst.name = "L2";
                         end
-                        emit lst:go;
-                    main.it_draws[1] = &lst:grid;
-                end
-
-                if opt != 0 then
-                    emit main.go_redim=&win_rect;
+                        emit lst.go;
+                    emit d = lst.ui;
+                    await FOREVER;
                 end
                 await FOREVER;
             end
-        finally
-            main.it_draws[1] = null;
         end
     with
         // SOUND
@@ -296,14 +231,31 @@ _printf("%d %d\n", win_rect.w, win_rect.h);
         // MOUSE
         loop do
             var _SDL_MouseButtonEvent* but = await SDL_MOUSEBUTTONDOWN;
-            emit main.go_mousebuttondown=but;
+            emit main.grid.go_mousebuttondown=but;
         end
     with
         // REDRAW
-        loop do
-            await SDL_REDRAW;
-            emit main.go_redraw;
-            _SDL_RenderPresent(ren);
+        par do
+            loop do
+                await SDL_REDRAW;
+                emit main.grid.go_redraw;
+                _SDL_RenderPresent(ren);
+            end
+        with
+            var int opt;
+            loop do
+                par/or do
+                    opt = await global:go_opt;
+                with
+                    if opt < 4 then
+                        await FOREVER;
+                    end
+                    var UI* ui = bar:uis[opt-1];
+                    await ui:ok_redraw_pre;
+                    _SDL_SetRenderDrawColor(ren, 255,255,0,0);
+                    _SDL_RenderFillRect(ren, &ui:rect);
+                end
+            end
         end
     end
 
@@ -317,12 +269,31 @@ end     // LOCALS
     _Mix_CloseAudio();            // TODO: slow
 
 // lua
+    _LuaGrid_res_unload(lua);
     _lua_close(lua);
 
 // screen
-    _TTF_CloseFont(font);
     _TTF_Quit();
     _SDL_DestroyRenderer(ren);
     _SDL_DestroyWindow(win);
 
 return 0;
+
+/*
+==5946== ==5946== HEAP SUMMARY:
+==5946==     in use at exit: 63,557 bytes in 631 blocks
+==5946==   total heap usage: 182,050 allocs, 181,419 frees, 113,166,121 bytes allocated
+==5946== LEAK SUMMARY:
+==5946==    definitely lost: 870 bytes in 13 blocks
+==5946==    still reachable: 62,687 bytes in 618 blocks
+==5946== ERROR SUMMARY: 9481 errors from 5 contexts (suppressed: 234 from 11)
+===============================================================================
+-- 30 min and RenderDrawRect
+==16473== HEAP SUMMARY:
+==16473==     in use at exit: 63,645 bytes in 632 blocks
+==16473==   total heap usage: 467,626 allocs, 466,994 frees, 321,235,528 bytes allocated
+==16473== LEAK SUMMARY:
+==16473==    definitely lost: 958 bytes in 14 blocks
+==16473==    still reachable: 62,687 bytes in 618 blocks
+==16473== ERROR SUMMARY: 4454740 errors from 7 contexts (suppressed: 234 from 11)
+*/

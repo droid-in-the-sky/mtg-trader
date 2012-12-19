@@ -7,14 +7,10 @@ import android.view.WindowManager;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 
-/*
- * A sample wrapper class that just calls SDLActivity
- */
-
 public class MTGTrader extends SDLActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 /*
     protected void onDestroy() {
