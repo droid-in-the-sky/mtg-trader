@@ -21,6 +21,7 @@ RES = {
     imgs = {
         { id='add',  file=DIR..'/add.png' },
         { id='find', file=DIR..'/find.png' },
+        { id='mute', file=DIR..'/mute.png' },
         { id='l1',   file=DIR..'/l1.png' },
         { id='l2',   file=DIR..'/l2.png' },
         { id='rem',  file=DIR..'/rem.png' },
@@ -85,11 +86,12 @@ grid_main = {
             lay = {
                 lins = 1,
                 cols = 9,
-                1, 2, 2, 2, 2, 2, 3, 4, 5
+                1, 2, 2, 2, 2, 3, 4, 5, 6
             },
             uis = {
                 { img=RES.imgs.find },
                 { },    -- textfield
+                { img=RES.imgs.mute },
                 { img=RES.imgs.vs   },
                 { img=RES.imgs.l1 },
                 { img=RES.imgs.l2 },

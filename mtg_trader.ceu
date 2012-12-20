@@ -1,6 +1,17 @@
 @include(lua.ceu);
 @include(sdl.ceu);
 
+C _DIR(), _DIR_;
+C do
+    static char* DIR_;
+    char DIR_path[256];
+
+    char* DIR (char* filename) {
+        snprintf(DIR_path, 255, "%s/%s", DIR_, filename);
+        return DIR_path;
+    }
+end
+
 input void START;
 input void SDL_REDRAW;
 input void SDL_QUIT;
@@ -39,19 +50,29 @@ event int go_opt;
         win_rect.x = 0;
         win_rect.y = 0;
     var _SDL_Window* win := _SDL_CreateWindow("MTG Trader",
-                                500, 1300, 320, 240, _SDL_WINDOW_SHOWN);
+                                //500, 1300, 320, 240, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 400, 240, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 432, 240, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 480, 320, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 640, 480, _SDL_WINDOW_SHOWN);
-                                //500, 1300, 800, 480, _SDL_WINDOW_SHOWN);
+                                500, 1300, 800, 480, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 1280, 800, _SDL_WINDOW_SHOWN);
                                 //500, 1300, 800, 480, _SDL_WINDOW_RESIZABLE);
     //_SDL_SetWindowFullscreen(win, _SDL_TRUE);
     _SDL_GetWindowSize(win, &win_rect.w, &win_rect.h);
 
+    if win_rect.h < 400 then
+        _DIR_ = "imgs/low";
+    else/if win_rect.h < 800 then
+        _DIR_ = "imgs/medium";
+    else
+        _DIR_ = "imgs/medium";
+    end
+
     var _SDL_Renderer* ren := _SDL_CreateRenderer(win, -1,
                                 _SDL_RENDERER_ACCELERATED|_SDL_RENDERER_PRESENTVSYNC);
+
+    var _SDL_Texture* tex_mute := _IMG_LoadTexture(ren, _DIR("no.png"));
 
     _TTF_Init();
 
@@ -131,6 +152,8 @@ do      // LOCALS
 
     emit main.grid.go_redim = &win_rect;
 
+    var int mute? = 0;
+
     par/or do
         await SDL_QUIT;
     with
@@ -181,8 +204,17 @@ do      // LOCALS
                 fnd_str = await txt.ok_keyboard; // concurrent w/ ok_uiclicked
                 opt = 1;
             with
-                opt = await bar:ok_uiclicked; // VS=3, L1=4, L2=5
-                emit go_sound=snd_chg;
+                loop do
+                    var int o = await bar:ok_uiclicked; // VS=3, L1=4, L2=5
+                    if o == 3 then
+                        mute? = not mute?;
+                        emit go_sound=snd_chg;
+                    else
+                        emit go_sound=snd_chg;
+                        opt = o;
+                        break;
+                    end
+                end
             with
                 await global:go_opt;
                 // keep opt
@@ -198,16 +230,16 @@ do      // LOCALS
                     await FOREVER;
 
                 // VS
-                else/if opt == 3 then
+                else/if opt == 4 then
                     var VS vs;
                         emit vs.go;
                     emit d = vs.ui;
                     await FOREVER;
 
                 // L1 / L2
-                else/if opt==4 or opt==5 then
+                else/if opt==5 or opt==6 then
                     var Single lst;
-                        if opt == 4 then
+                        if opt == 5 then
                             lst.name = "L1";
                         else
                             lst.name = "L2";
@@ -223,9 +255,9 @@ do      // LOCALS
         // SOUND
         loop do
             var _Mix_Chunk* snd = await go_sound;
-            //if not mute? then
+            if not mute? then
                 _Mix_PlayChannel(-1, snd, 0);
-            //end
+            end
         end
     with
         // MOUSE
@@ -239,6 +271,9 @@ do      // LOCALS
             loop do
                 await SDL_REDRAW;
                 emit main.grid.go_redraw;
+                if mute? then
+                    _SDL_RenderCopy(ren, tex_mute, null, &bar:uis[2]:rect);
+                end
                 _SDL_RenderPresent(ren);
             end
         with
@@ -247,7 +282,7 @@ do      // LOCALS
                 par/or do
                     opt = await global:go_opt;
                 with
-                    if opt < 4 then
+                    if opt < 5 then
                         await FOREVER;
                     end
                     var UI* ui = bar:uis[opt-1];
@@ -273,6 +308,7 @@ end     // LOCALS
     _lua_close(lua);
 
 // screen
+    _SDL_DestroyTexture(tex_mute);
     _TTF_Quit();
     _SDL_DestroyRenderer(ren);
     _SDL_DestroyWindow(win);
