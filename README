@@ -1,0 +1,29 @@
+Magic the Gathering: offline card trader for Android.
+
+The application does not require internet access.
+
+Trade cards with your friends using the price list extracted from the MOTL 
+website (Magic Online Trading League):
+
+http://classic.magictraders.com/pricelists/
+
+The application is updated oftenly to keep the price list up-to-date.
+
+Features:
+
+- easy to use
+- offline search
+- open source
+- free (really!)
+    - no restrictions
+    - no ads
+
+Please, feel free to send us feedback:
+
+droid.in.the.sky@gmail.com
+
+The source code is available in GitHub:
+
+https://github.com/droid-in-the-sky/mtg-trader
+
+keywords: magic, mtg, cards, trade, offline

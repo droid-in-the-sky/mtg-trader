@@ -25,7 +25,6 @@ import android.content.*;
 
 import java.lang.*;
 
-
 /**
     SDL Activity
 */
@@ -35,7 +34,7 @@ public class SDLActivity extends Activity {
     public static boolean mIsPaused;
 
     // Main components
-    private static SDLActivity mSingleton;
+    public  static SDLActivity mSingleton;
     private static SDLSurface mSurface;
     private static View mTextEdit;
     private static ViewGroup mLayout;
@@ -589,11 +588,12 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     // unused
     public void onDraw(Canvas canvas) {}
 
-
-
-
     // Key events
     public boolean onKey(View  v, int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            SDLActivity.mSingleton.moveTaskToBack(true);
+            return true;
+        }
 
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
             //Log.v("SDL", "key down: " + keyCode);
@@ -686,7 +686,6 @@ class DummyEdit extends View implements View.OnKeyListener {
     }
 
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-
         // This handles the hardware keyboard input
         if (event.isPrintingKey()) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
